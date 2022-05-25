@@ -16,7 +16,14 @@ cap.set(10,150)
 ####################################################
 
 count = 0 # initializing variable count to 0 (used for naming saved img)
-
+try:
+	webCam_Status = input("do you have a webcam type Y FOR YES, N FOR NO ")
+except:
+	webCam_Status = raw_input("do you have a webcam type Y FOR YES, N FOR NO ")
+if webCam_Status == ('y' or 'Y'):
+	webCamFeed = True
+else:
+	webCamFeed = False
 while True:
 	if webCamFeed :
 		success,img = cap.read() 
@@ -114,7 +121,7 @@ while True:
 				Grading.append(0)
 		#print(Grading)
 		score = (sum(Grading)/questions)*100 #FINAL GRADE
-		print(score)
+		# print(score)
 
 		##DISPLAYING ANSWER
 
