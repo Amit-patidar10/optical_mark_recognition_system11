@@ -8,13 +8,13 @@ widthImg = 700
 hightImg = 600
 questions = 5
 choices = 5
-answer  = [1,2,0,1,4]
+answer  = [1,4,0,1,4]
 webCamFeed = True
 cap = cv2.VideoCapture(0)
 cap.set(10,150)
 
 ####################################################
-
+cx = 1
 count = 0 # initializing variable count to 0 (used for naming saved img)
 try:
 	webCam_Status = input("do you have a webcam type Y FOR YES, N FOR NO ")
@@ -28,7 +28,10 @@ while True:
 	if webCamFeed :
 		success,img = cap.read() 
 	else: 
-		img = cv2.imread(test_image) #original img
+		test_image = "./image/"+str(cx)+".jpg"
+		orignalimg = test_image
+
+		img = cv2.imread(orignalimg) #original img
 	
 	## PREPROCESSING IMAGE
 
@@ -38,10 +41,10 @@ while True:
 	imgBlur = cv2.GaussianBlur(imgGray,(5,5),0) #making img smooth so it will be easy to detect imp. edge only
 	# cv2.imshow("imgBlur",imgBlur)
 	imgCanny = cv2.Canny(imgBlur,10,50) #detecting edge using Canny function
-	imgContour = img.copy()
-	Biggest_contour_Img = img.copy()
-	grade_Point_Img = img.copy()
-	imgFinal = img.copy()
+	imgContour = img.copy() #creating an copy of orignal image to draw countours
+	Biggest_contour_Img = img.copy() 
+	grade_Point_Img = img.copy() 
+	imgFinal = img.copy() 
 	
 	try:
 
@@ -78,7 +81,7 @@ while True:
 		##APPLYING THRESHOLD
 
 		imgWarpGray = cv2.cvtColor(img_warp_colored,cv2.COLOR_BGR2GRAY)
-		imgThresh = cv2.threshold(imgWarpGray,180,255,cv2.THRESH_BINARY_INV)[1]
+		imgThresh = cv2.threshold(imgWarpGray,190,255,cv2.THRESH_BINARY_INV)[1]
 
 		boxes = utlis.splitBoxes(imgThresh)
 		# cv2.imshow("test",boxes[7])
@@ -163,12 +166,17 @@ while True:
 	ImgStacked = utlis.stackImages(ImgArray,0.3,lables)
 	cv2.imshow('orignal',ImgStacked)
 	cv2.imshow("final img",imgFinal)
-	if cv2.waitKey(100) & 0xFF == ord('s'):
+	cv2.imshow("realimg",img)
+	if cv2.waitKey(3000) & 0xFF == ord('s'):
 		cv2.imwrite("FinalResult"+str(count)+".jpg",imgFinal)
-		cv2.waitKey(300)
 		count+=1
-	if cv2.waitKey(5000) & 0xFF == ord('q'):
+	elif cv2.waitKey(5000) & 0xFF == ord('l') and cx <= 3:
+		cx+=1
+	elif cv2.waitKey(3000) & 0xFF == ord('q'):
 		break
+	else:
+		cx = 1
+		
 cap.release()
 cv2.destroyAllWindows()	
 
