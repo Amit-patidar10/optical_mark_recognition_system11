@@ -13,7 +13,6 @@ while True:
 	orignalimg = test_image
 
 	img = cv2.imread(orignalimg)
-	img = cv2.resize(img,(widthImg,hightImg))
 	cv2.imshow("img",img)
 	cv2.waitKey(0)
 

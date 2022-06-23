@@ -3,12 +3,12 @@ import numpy as np
 import utlis
 
 ####################################################
-test_image = "./image/1.jpg"
+test_image = "./image/3.jpg"
 widthImg = 700
 hightImg = 600
 questions = 5
 choices = 5
-answer  = [1,4,0,1,4]
+answer  = [1,4,0,1,3]
 webCamFeed = True
 cap = cv2.VideoCapture(0)
 cap.set(10,150)
@@ -31,7 +31,7 @@ while True:
 		test_image = "./image/"+str(cx)+".jpg"
 		orignalimg = test_image
 
-		img = cv2.imread(orignalimg) #original img
+		img = cv2.imread(test_image) #original img
 	
 	## PREPROCESSING IMAGE
 
@@ -138,19 +138,20 @@ while True:
 
 		 #GRADE DISPLAY
 		imgRawGrade = np.zeros_like(imgGradeDisplay)
-		cv2.putText(imgRawGrade,str(int(score))+"%",(50,100),cv2.FONT_HERSHEY_COMPLEX,3,(0,255,0),6)
-		#cv2.imshow("grade",imgRawGrade)
+		cv2.putText(imgRawGrade,str(int(score))+"%",(50,100),cv2.FONT_HERSHEY_COMPLEX,3,(0,255,0),5)
+		# cv2.imshow("grade",imgRawGrade)
 		InvmatrixG = cv2.getPerspectiveTransform(ptG2,ptG1)
 		InvimgGradeDisplay = cv2.warpPerspective(imgRawGrade,InvmatrixG,(widthImg,hightImg))
 			
 		imgFinal = cv2.addWeighted(imgFinal,1,Inv_img_warp,1,0)
-		imgFinal = cv2.addWeighted(imgFinal,1,InvimgGradeDisplay,1,0)
+		imgFinal = cv2.addWeighted(imgFinal,1,InvimgGradeDisplay,2,0)
 		BlankImg = np.zeros_like(img)
 
 
 		ImgArray = ([img,imgGray,imgBlur,imgCanny],
 			[imgContour,Biggest_contour_Img,img_warp_colored,imgThresh],
 			[result_img,ImgRawDrawing,Inv_img_warp,imgFinal])
+		finalArray = ([img,imgFinal])
 	except:
 		BlankImg = np.zeros_like(img)	
 		ImgArray = ([img,imgGray,imgBlur,imgCanny],
@@ -164,18 +165,19 @@ while True:
 	          ["contours","CornerPoints","warpPerspective","threshold"], 
 	          ["Result","RawDrawing","InvWarpPerspective","Final"]]
 	ImgStacked = utlis.stackImages(ImgArray,0.3,lables)
+	Finalstack = utlis.stackImages(finalArray,0.79)
 	cv2.imshow('orignal',ImgStacked)
-	cv2.imshow("final img",imgFinal)
-	cv2.imshow("realimg",img)
-	if cv2.waitKey(3000) & 0xFF == ord('s'):
+	cv2.imshow("final img",Finalstack)
+	if cv2.waitKey(5000) & 0xFF == ord('s'):
 		cv2.imwrite("FinalResult"+str(count)+".jpg",imgFinal)
 		count+=1
 	elif cv2.waitKey(5000) & 0xFF == ord('l') and cx <= 3:
-		cx+=1
-	elif cv2.waitKey(3000) & 0xFF == ord('q'):
+		if cx == 3:
+			cx = 1
+		else:
+			cx+=1
+	elif cv2.waitKey(5000) & 0xFF == ord('q'):
 		break
-	else:
-		cx = 1
 		
 cap.release()
 cv2.destroyAllWindows()	
