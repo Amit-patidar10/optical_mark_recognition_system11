@@ -168,6 +168,8 @@ while True:
 	Finalstack = utlis.stackImages(finalArray,0.79)
 	cv2.imshow('orignal',ImgStacked)
 	cv2.imshow("final img",Finalstack)
+
+	##KEY TO USE // TRAVERSAL
 	if cv2.waitKey(5000) & 0xFF == ord('s'):
 		cv2.imwrite("FinalResult"+str(count)+".jpg",imgFinal)
 		count+=1
