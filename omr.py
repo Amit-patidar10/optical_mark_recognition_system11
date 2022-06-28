@@ -36,11 +36,13 @@ while True:
 	## PREPROCESSING IMAGE
 
 	img = cv2.resize(img,(widthImg,hightImg)) #resize original img
+	cv2.imshow("original image",img)
 	imgGray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY) #converting img from BGR(which is default color format in opencv) to gray(black & white)
-	# print(imgGray.shape)
+	# cv2.imshow("grayscale",imgGray)
 	imgBlur = cv2.GaussianBlur(imgGray,(5,5),0) #making img smooth so it will be easy to detect imp. edge only
 	# cv2.imshow("imgBlur",imgBlur)
 	imgCanny = cv2.Canny(imgBlur,10,50) #detecting edge using Canny function
+	# cv2.imshow("image canny",imgCanny)
 	imgContour = img.copy() #creating an copy of orignal image to draw countours
 	Biggest_contour_Img = img.copy() 
 	grade_Point_Img = img.copy() 
@@ -51,6 +53,7 @@ while True:
 		## FINDING ALL OUR CONTOURS
 		contours,hierarchy = cv2.findContours(imgCanny,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
 		cv2.drawContours(imgContour,contours,-1,(0,225,0),10)
+		# cv2.imshow("image contours",imgContour)
 
 
 
@@ -60,21 +63,24 @@ while True:
 		grade_Point = utlis.getCornerPoints(rectCon[1])
 
 
+
         ## TO 
 		if Biggest_contour.size != 0 and grade_Point.size != 0:
 			cv2.drawContours(Biggest_contour_Img,Biggest_contour,-1,(0,225,0),20)
 			cv2.drawContours(Biggest_contour_Img,grade_Point,-1,(225,0,0),20)
+			# cv2.imshow("CornerPoints",Biggest_contour_Img)
 
 			pt1 = np.float32(Biggest_contour)
 			pt2 = np.float32([[0,0],[0,hightImg],[widthImg,hightImg],[widthImg,0]])
 			matrix = cv2.getPerspectiveTransform(pt1,pt2)
 			img_warp_colored = cv2.warpPerspective(img,matrix,(widthImg,hightImg))
+			# cv2.imshow("warp perspective",img_warp_colored)
 
 			ptG1 = np.float32(grade_Point)
 			ptG2 = np.float32([[0,0],[0,150],[325,150],[325,0]])
 			matrixG = cv2.getPerspectiveTransform(ptG1,ptG2)
 			imgGradeDisplay = cv2.warpPerspective(img,matrixG,(325,150))
-			#cv2.imshow("grade",imgGradeDisplay)
+			# cv2.imshow("grade",imgGradeDisplay)
 
 
 
@@ -82,6 +88,7 @@ while True:
 
 		imgWarpGray = cv2.cvtColor(img_warp_colored,cv2.COLOR_BGR2GRAY)
 		imgThresh = cv2.threshold(imgWarpGray,190,255,cv2.THRESH_BINARY_INV)[1]
+		# cv2.imshow("applyed threshold",imgThresh)
 
 		boxes = utlis.splitBoxes(imgThresh)
 		# cv2.imshow("test",boxes[7])
@@ -131,10 +138,13 @@ while True:
 		 #OMR MARK DISPLAY
 		result_img = img_warp_colored.copy()
 		result_img = utlis.showAnswers(result_img,MyIndex,Grading,answer,questions,choices)
+		# cv2.imshow("answer",result_img)
 		ImgRawDrawing = np.zeros_like(img_warp_colored)
 		ImgRawDrawing = utlis.showAnswers(ImgRawDrawing,MyIndex,Grading,answer,questions,choices)
+		# cv2.imshow("answer warp ",ImgRawDrawing)
 		InvMatrix = cv2.getPerspectiveTransform(pt2,pt1)
 		Inv_img_warp = cv2.warpPerspective(ImgRawDrawing,InvMatrix,(widthImg,hightImg))
+		# cv2.imshow("inv warp Perspective",Inv_img_warp)
 
 		 #GRADE DISPLAY
 		imgRawGrade = np.zeros_like(imgGradeDisplay)
@@ -142,12 +152,14 @@ while True:
 		# cv2.imshow("grade",imgRawGrade)
 		InvmatrixG = cv2.getPerspectiveTransform(ptG2,ptG1)
 		InvimgGradeDisplay = cv2.warpPerspective(imgRawGrade,InvmatrixG,(widthImg,hightImg))
-			
+		# cv2.imshow("grade display",InvimgGradeDisplay)
+
 		imgFinal = cv2.addWeighted(imgFinal,1,Inv_img_warp,1,0)
+		# cv2.imshow("Result",imgFinal)
 		imgFinal = cv2.addWeighted(imgFinal,1,InvimgGradeDisplay,2,0)
+		# cv2.imshow("Result",imgFinal)
+
 		BlankImg = np.zeros_like(img)
-
-
 		ImgArray = ([img,imgGray,imgBlur,imgCanny],
 			[imgContour,Biggest_contour_Img,img_warp_colored,imgThresh],
 			[result_img,ImgRawDrawing,Inv_img_warp,imgFinal])
@@ -157,6 +169,7 @@ while True:
 		ImgArray = ([img,imgGray,imgBlur,imgCanny],
 				[BlankImg,BlankImg,BlankImg,BlankImg],
 				[BlankImg,BlankImg,BlankImg,BlankImg])
+		finalArray =([img,BlankImg])
 
 
 	## OUTPUT STATEMENT
@@ -164,10 +177,11 @@ while True:
 	lables = [["orignal","gray","blur","canny"],
 	          ["contours","CornerPoints","warpPerspective","threshold"], 
 	          ["Result","RawDrawing","InvWarpPerspective","Final"]]
-	ImgStacked = utlis.stackImages(ImgArray,0.3,lables)
+	ImgStacked = utlis.stackImages(ImgArray,0.4,lables)
 	Finalstack = utlis.stackImages(finalArray,0.79)
 	cv2.imshow('orignal',ImgStacked)
 	cv2.imshow("final img",Finalstack)
+
 
 	##KEY TO USE // TRAVERSAL
 	if cv2.waitKey(5000) & 0xFF == ord('s'):
