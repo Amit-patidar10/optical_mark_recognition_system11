@@ -78,27 +78,48 @@ def getCornerPoints(cont):
 
 def splitBoxes(img):
     rows = np.vsplit(img,5)
-    # cv2.imshow("test",rows[1])
+    
     boxes = []
     for x in rows:
         cols = np.hsplit(x,5)
+        # rowsplit = ([rows[0]],[rows[1]],[rows[2]],[rows[3]],[rows[4]])
+        # ImgStacked = stackImages(rowsplit,0.5)
+        # cv2.imshow("test",ImgStacked)
+
         for box in cols:
          boxes.append(box)
+         # print(type(boxes))
+    
     return boxes
+
+def drawGrid(img,questions=5,choices=5):
+    secW = int(img.shape[1]/questions)
+    secH = int(img.shape[0]/choices)
+    for i in range (0,9):
+        pt1 = (0,secH*i)
+        pt2 = (img.shape[1],secH*i)
+        pt3 = (secW * i, 0)
+        pt4 = (secW*i,img.shape[0])
+        cv2.line(img, pt1, pt2, (255, 255, 0),2)
+        cv2.line(img, pt3, pt4, (255, 255, 0),2)
 
 
 
 
 
 def showAnswers(img,MyIndex,Grading,answer,questions,choices):
-    secW = int(img.shape[1]/questions)
-    secH = int(img.shape[0]/questions)
+    secW = int(img.shape[1]/questions) #shape at index 1 describe width
+    secH = int(img.shape[0]/questions) #shape at index 0 describe hight
 
     for x in range(0,questions):
         myAns = MyIndex[x]
+        # print(x)
         cX = (myAns*secW)+secW//2
+        # print("center from X-axis =",cX)
         cY = (x*secH) + secH//2
+        # print("center from Y-axis =",cY)
 
+       
         if Grading[x] == 1:
             Mycolor = (0,255,0)
         else: 
@@ -112,6 +133,24 @@ def showAnswers(img,MyIndex,Grading,answer,questions,choices):
 
 
 
+def Explainer(img,MyIndex,Grading,answer,questions,choices):
+    secW = int(img.shape[1]/questions) #shape at index 1 describe width
+    secH = int(img.shape[0]/questions) #shape at index 0 describe hight
+    print("\nsection width =",secW)
+    print("section hight =",secH)
+
+    for x in range(0,questions):
+        myAns = MyIndex[x]
+        cX = (myAns*secW)+secW//2
+        cY = (x*secH) + secH//2
+        print("coordinate of center of marked section = ",(cX,cY))
+        pt1 = (0,cY)
+        pt2 = (cX,cY)
+        pt3 = (cX,0)
+        pt4 = (cX,cY)
+        cv2.line(img,pt1 ,pt2 , (252, 3, 3),2)
+        cv2.line(img,pt3 ,pt4 , (252, 3, 3),2)
+    return img
 
 
 

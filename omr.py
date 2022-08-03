@@ -36,7 +36,7 @@ while True:
 	## PREPROCESSING IMAGE
 
 	img = cv2.resize(img,(widthImg,hightImg)) #resize original img
-	cv2.imshow("original image",img)
+	# cv2.imshow("original image",img)
 	imgGray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY) #converting img from BGR(which is default color format in opencv) to gray(black & white)
 	# cv2.imshow("grayscale",imgGray)
 	imgBlur = cv2.GaussianBlur(imgGray,(5,5),0) #making img smooth so it will be easy to detect imp. edge only
@@ -89,6 +89,8 @@ while True:
 		imgWarpGray = cv2.cvtColor(img_warp_colored,cv2.COLOR_BGR2GRAY)
 		imgThresh = cv2.threshold(imgWarpGray,190,255,cv2.THRESH_BINARY_INV)[1]
 		# cv2.imshow("applyed threshold",imgThresh)
+		thresh_explain = imgThresh.copy()
+		utlis.drawGrid(thresh_explain)
 
 		boxes = utlis.splitBoxes(imgThresh)
 		# cv2.imshow("test",boxes[7])
@@ -104,22 +106,33 @@ while True:
 		countC = 0
 
 		for image in boxes:
-			total_Pixels = cv2.countNonZero(image)
+			total_Pixels = cv2.countNonZero(image) #count number of non zero pixel
 			
 			MyPixelVal[countR][countC] = total_Pixels
 			countC+=1
 			if (countC == choices): countR+=1 ; countC = 0
-		# print(MyPixelVal)
+		print("\n non zero pixel count =\n\n",MyPixelVal)
+		
+		what = np.zeros_like(imgGradeDisplay)
+		
 
 
 		MyIndex =[]
+		array_Index = 0 
 		for x in range(0,choices) :
 			arr = MyPixelVal[x]
-			##print("arr",arr)
+			print('\narray index',array_Index, end = ' = ')
+			print(arr)
 			MyIndexVal = np.where(arr == np.amax(arr))
-			##print(MyIndexVal[0])
+			print("max non zero pixel count = ",MyIndexVal[0])
 			MyIndex.append(MyIndexVal[0][0])
-		# print(MyIndex)	
+			print("1D array =",MyIndex)
+			array_Index+=1
+		print('\nmarked array =',MyIndex)
+		print("answer array =",answer)
+		# cv2.putText(img=what, text='Hello', org=(50, 100), fontFace=cv2.FONT_HERSHEY_TRIPLEX, fontScale=3, color=(0, 255, 0),thickness=3)
+		# cv2.imshow('answer',what)
+
 
 
 		## GRADING
@@ -129,26 +142,40 @@ while True:
 				Grading.append(1)
 			else: 
 				Grading.append(0)
-		#print(Grading)
+		print("compaired arr=",Grading)
+		print("\nsum of grading array =",sum(Grading))
+		print("number of questions =",questions)
+		print("score = (sum of grading array/number of questions)*100")
 		score = (sum(Grading)/questions)*100 #FINAL GRADE
-		# print(score)
+		print("score =",score)
 
 		##DISPLAYING ANSWER
 
 		 #OMR MARK DISPLAY
 		result_img = img_warp_colored.copy()
+		explain_img = img_warp_colored.copy() #explainer
+		gridIMG = img_warp_colored.copy()
+		utlis.drawGrid(gridIMG)
 		result_img = utlis.showAnswers(result_img,MyIndex,Grading,answer,questions,choices)
-		# cv2.imshow("answer",result_img)
+		explain_img = utlis.Explainer(explain_img,MyIndex,Grading,answer,questions,choices)
+		utlis.drawGrid(result_img)
+		## cv2.imshow("answer",result_img)
+		## cv2.imshow("explain_img",explain_img)
+
 		ImgRawDrawing = np.zeros_like(img_warp_colored)
 		ImgRawDrawing = utlis.showAnswers(ImgRawDrawing,MyIndex,Grading,answer,questions,choices)
-		# cv2.imshow("answer warp ",ImgRawDrawing)
+		## cv2.imshow("answer warp ",ImgRqawDrawing)
+		rawImage = explain_img.copy()
+		utlis.drawGrid(rawImage)
+		## cv2.imshow("rawImage",rawImage)
+
 		InvMatrix = cv2.getPerspectiveTransform(pt2,pt1)
 		Inv_img_warp = cv2.warpPerspective(ImgRawDrawing,InvMatrix,(widthImg,hightImg))
-		# cv2.imshow("inv warp Perspective",Inv_img_warp)
+		## cv2.imshow("inv warp Perspective",Inv_img_warp)
 
 		 #GRADE DISPLAY
 		imgRawGrade = np.zeros_like(imgGradeDisplay)
-		cv2.putText(imgRawGrade,str(int(score))+"%",(50,100),cv2.FONT_HERSHEY_COMPLEX,3,(0,255,0),5)
+		cv2.putText(imgRawGrade,str(int(score))+"%",(50,100),cv2.FONT_HERSHEY_COMPLEX,3,(0,255,255),5)
 		# cv2.imshow("grade",imgRawGrade)
 		InvmatrixG = cv2.getPerspectiveTransform(ptG2,ptG1)
 		InvimgGradeDisplay = cv2.warpPerspective(imgRawGrade,InvmatrixG,(widthImg,hightImg))
@@ -164,12 +191,14 @@ while True:
 			[imgContour,Biggest_contour_Img,img_warp_colored,imgThresh],
 			[result_img,ImgRawDrawing,Inv_img_warp,imgFinal])
 		finalArray = ([img,imgFinal])
+		explainArray = ([img_warp_colored,thresh_explain,gridIMG],[explain_img,rawImage,result_img])
 	except:
 		BlankImg = np.zeros_like(img)	
 		ImgArray = ([img,imgGray,imgBlur,imgCanny],
 				[BlankImg,BlankImg,BlankImg,BlankImg],
 				[BlankImg,BlankImg,BlankImg,BlankImg])
 		finalArray =([img,BlankImg])
+		explainArray = ([BlankImg,BlankImg],[BlankImg,BlankImg])
 
 
 	## OUTPUT STATEMENT
@@ -177,22 +206,25 @@ while True:
 	lables = [["orignal","gray","blur","canny"],
 	          ["contours","CornerPoints","warpPerspective","threshold"], 
 	          ["Result","RawDrawing","InvWarpPerspective","Final"]]
-	ImgStacked = utlis.stackImages(ImgArray,0.4,lables)
-	Finalstack = utlis.stackImages(finalArray,0.79)
+	ImgStacked = utlis.stackImages(ImgArray,0.3)
+	FinalStack = utlis.stackImages(finalArray,0.79)
+	explainStack = utlis.stackImages(explainArray,0.5)
 	cv2.imshow('orignal',ImgStacked)
-	cv2.imshow("final img",Finalstack)
+	cv2.imshow('explain',explainStack)
+	cv2.imshow('final img',FinalStack)
+	cv2.imshow('test_i',rawImage)
 
 
 	##KEY TO USE // TRAVERSAL
-	if cv2.waitKey(5000) & 0xFF == ord('s'):
+	if cv2.waitKey(0) & 0xFF == ord('s'):
 		cv2.imwrite("FinalResult"+str(count)+".jpg",imgFinal)
 		count+=1
-	elif cv2.waitKey(5000) & 0xFF == ord('l') and cx <= 3:
+	elif cv2.waitKey(0) & 0xFF == ord('l') and cx <= 3:
 		if cx == 3:
 			cx = 1
 		else:
 			cx+=1
-	elif cv2.waitKey(5000) & 0xFF == ord('q'):
+	elif cv2.waitKey(0) & 0xFF == ord('q'):
 		break
 		
 cap.release()
